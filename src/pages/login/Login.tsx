@@ -1,19 +1,29 @@
-import { LockFilled, LockOutlined, UserOutlined } from '@ant-design/icons';
-import { Button, Card, Checkbox, Flex, Input, Layout, Space, Form } from 'antd';
-import Logo from '../../components/icons/Logo';
+import { LockFilled, LockOutlined, UserOutlined } from "@ant-design/icons";
+import { Button, Card, Checkbox, Flex, Input, Layout, Space, Form } from "antd";
+import Logo from "../../components/icons/Logo";
 
 export default function LoginPage() {
   const [form] = Form.useForm();
 
-  const onFinish = (values: { username: string; password: string; remember?: boolean }) => {
+  const onFinish = (values: {
+    username: string;
+    password: string;
+    remember?: boolean;
+  }) => {
     console.log(values);
     // mutate({ email: values.username, password: values.password });
   };
 
   return (
-    <Layout style={{ height: '100vh', display: 'grid', placeItems: 'center' }}>
+    <Layout style={{ height: "100vh", display: "grid", placeItems: "center" }}>
       <Space direction="vertical" align="center" size="large">
-        <Layout.Content style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Layout.Content
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
           <Logo />
         </Layout.Content>
 
@@ -21,7 +31,14 @@ export default function LoginPage() {
           bordered={false}
           style={{ width: 300 }}
           title={
-            <Space style={{ width: '100%', fontSize: 16, justifyContent: 'center',color:'#1A2B48' }}>
+            <Space
+              style={{
+                width: "100%",
+                fontSize: 16,
+                justifyContent: "center",
+                color: "#1A2B48",
+              }}
+            >
               <LockFilled />
               Sign in
             </Space>
@@ -37,8 +54,8 @@ export default function LoginPage() {
               label="Email"
               name="username"
               rules={[
-                { required: true, message: 'Please input your email' },
-                { type: 'email', message: 'Email is not valid' },
+                { required: true, message: "Please input your email" },
+                { type: "email", message: "Email is not valid" },
               ]}
             >
               <Input prefix={<UserOutlined />} placeholder="Username" />
@@ -47,14 +64,23 @@ export default function LoginPage() {
             <Form.Item
               label="Password"
               name="password"
-              rules={[{ required: true, message: 'Please input your password' }]}
+              rules={[
+                { required: true, message: "Please input your password" },
+              ]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+              <Input.Password
+                prefix={<LockOutlined />}
+                placeholder="Password"
+              />
             </Form.Item>
 
             <Flex justify="space-between" align="center">
-              <Form.Item name="remember" valuePropName="checked" style={{ marginBottom: 0 }}>
-                <Checkbox>Remember me</Checkbox>
+              <Form.Item
+                name="remember"
+                valuePropName="checked"
+                style={{ marginBottom: 0 }}
+              >
+                  <Checkbox>Remember me</Checkbox>
               </Form.Item>
 
               <a href="/forgot-password" id="login-form-forgot">
@@ -63,7 +89,11 @@ export default function LoginPage() {
             </Flex>
 
             <Form.Item style={{ marginTop: 16 }}>
-              <Button type="primary" htmlType="submit" style={{ width: '100%',backgroundColor:"#109B9C" }}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                style={{ width: "100%" }}
+              >
                 Log in
               </Button>
             </Form.Item>

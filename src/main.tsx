@@ -4,8 +4,11 @@ import "antd/dist/reset.css";
 import './index.css'
 import { RouterProvider } from 'react-router-dom'
 import { Routers } from './router/Router.tsx'
+import { ConfigProvider } from 'antd';
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ConfigProvider theme={{ token: { colorPrimary:"109B9C"  } }}>
     <RouterProvider router={Routers} />
+    </ConfigProvider>
   </StrictMode>,
 )
