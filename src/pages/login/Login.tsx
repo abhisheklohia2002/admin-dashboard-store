@@ -1,17 +1,42 @@
 import { LockFilled, LockOutlined, UserOutlined } from "@ant-design/icons";
-import { Button, Card, Checkbox, Flex, Input, Layout, Space, Form } from "antd";
+import {
+  Button,
+  Card,
+  Checkbox,
+  Flex,
+  Input,
+  Layout,
+  Space,
+  Form,
+  Alert,
+} from "antd";
 import Logo from "../../components/icons/Logo";
+import { useMutation } from "@tanstack/react-query";
+import type { Credentials } from "../../types";
+import { login } from "../../http/api";
 
 export default function LoginPage() {
   const [form] = Form.useForm();
+  const loginUser = async (userData: Credentials) => {
+    const { data } = await login(userData);
+    return data;
+  };
+
+  const successLogin = async () => {
+    console.log("login successfully");
+  };
+  const { mutate, isPending, isError } = useMutation({
+    mutationKey: ["login"],
+    mutationFn: loginUser,
+    onSuccess: successLogin,
+  });
 
   const onFinish = (values: {
     username: string;
     password: string;
     remember?: boolean;
   }) => {
-    console.log(values);
-    // mutate({ email: values.username, password: values.password });
+    mutate({ email: values.username, password: values.password });
   };
 
   return (
@@ -50,6 +75,7 @@ export default function LoginPage() {
             initialValues={{ remember: true }}
             onFinish={onFinish}
           >
+            {isError && <Alert type="error" title="Something went wrong" />}
             <Form.Item
               label="Email"
               name="username"
@@ -80,7 +106,7 @@ export default function LoginPage() {
                 valuePropName="checked"
                 style={{ marginBottom: 0 }}
               >
-                  <Checkbox>Remember me</Checkbox>
+                <Checkbox>Remember me</Checkbox>
               </Form.Item>
 
               <a href="/forgot-password" id="login-form-forgot">
@@ -93,6 +119,7 @@ export default function LoginPage() {
                 type="primary"
                 htmlType="submit"
                 style={{ width: "100%" }}
+                loading={isPending}
               >
                 Log in
               </Button>
