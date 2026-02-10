@@ -9,3 +9,7 @@ export const login = async (credentials: Credentials) => {
 export const self = async () => {
   return await api.get("/auth/self");
 };
+
+export const logout = async () => {
+  return await api.post("/auth/logout");
+};

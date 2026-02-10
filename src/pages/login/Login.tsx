@@ -13,43 +13,47 @@ import {
 import Logo from "../../components/icons/Logo";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Credentials } from "../../types";
-import { login, self } from "../../http/api";
+import { login, self, logout } from "../../http/api";
 import { useAuthStore } from "../../store/store";
 
+import { usePermission } from "../../hooks/usePermission";
 
+const getSelf = async () => {
+  const { data } = await self();
+  return data;
+};
 
-const getSelf = async()=>{
-    const {data} = await self();
-    return data;
-}
+const loginUser = async (userData: Credentials) => {
+  const { data } = await login(userData);
+  return data;
+};
 
- const loginUser = async (userData: Credentials) => {
-    const { data } = await login(userData);
-    return data;
-  };
-
-  const successLogin = async () => {
-    console.log("login successfully");
-  };
-
+const successLogin = async () => {
+  console.log("login successfully");
+};
 
 export default function LoginPage() {
-    const {setUser} = useAuthStore()
+  const { setUser } = useAuthStore();
   const [form] = Form.useForm();
+  const { isAllowed } = usePermission();
 
-  const {refetch} = useQuery({
-    queryKey:['self'],
-    queryFn:getSelf,
-    enabled:false
-  })
+  const { refetch } = useQuery({
+    queryKey: ["self"],
+    queryFn: getSelf,
+    enabled: false,
+  });
 
   const { mutate, isPending, isError } = useMutation({
     mutationKey: ["login"],
     mutationFn: loginUser,
-    onSuccess:async ()=>{
-        successLogin()
-        const selfdata = await refetch()
-        setUser(selfdata.data)
+    onSuccess: async () => {
+      successLogin();
+      const selfdata = await refetch();
+      if (!isAllowed(selfdata.data)) {
+        logout();
+        return;
+      }
+      setUser(selfdata.data);
     },
   });
 
