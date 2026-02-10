@@ -11,13 +11,19 @@ import {
   Alert,
 } from "antd";
 import Logo from "../../components/icons/Logo";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Credentials } from "../../types";
-import { login } from "../../http/api";
+import { login, self } from "../../http/api";
+import { useAuthStore } from "../../store/store";
 
-export default function LoginPage() {
-  const [form] = Form.useForm();
-  const loginUser = async (userData: Credentials) => {
+
+
+const getSelf = async()=>{
+    const {data} = await self();
+    return data;
+}
+
+ const loginUser = async (userData: Credentials) => {
     const { data } = await login(userData);
     return data;
   };
@@ -25,10 +31,26 @@ export default function LoginPage() {
   const successLogin = async () => {
     console.log("login successfully");
   };
+
+
+export default function LoginPage() {
+    const {setUser} = useAuthStore()
+  const [form] = Form.useForm();
+
+  const {refetch} = useQuery({
+    queryKey:['self'],
+    queryFn:getSelf,
+    enabled:false
+  })
+
   const { mutate, isPending, isError } = useMutation({
     mutationKey: ["login"],
     mutationFn: loginUser,
-    onSuccess: successLogin,
+    onSuccess:async ()=>{
+        successLogin()
+        const selfdata = await refetch()
+        setUser(selfdata.data)
+    },
   });
 
   const onFinish = (values: {
@@ -41,7 +63,7 @@ export default function LoginPage() {
 
   return (
     <Layout style={{ height: "100vh", display: "grid", placeItems: "center" }}>
-      <Space direction="vertical" align="center" size="large">
+      <Space orientation="vertical" align="center" size="large">
         <Layout.Content
           style={{
             display: "flex",
@@ -53,7 +75,7 @@ export default function LoginPage() {
         </Layout.Content>
 
         <Card
-          bordered={false}
+          variant="outlined"
           style={{ width: 300 }}
           title={
             <Space
@@ -84,7 +106,11 @@ export default function LoginPage() {
                 { type: "email", message: "Email is not valid" },
               ]}
             >
-              <Input prefix={<UserOutlined />} placeholder="Username" />
+              <Input
+                autoComplete="off"
+                prefix={<UserOutlined />}
+                placeholder="Username"
+              />
             </Form.Item>
 
             <Form.Item
@@ -95,6 +121,7 @@ export default function LoginPage() {
               ]}
             >
               <Input.Password
+                autoComplete="new-password"
                 prefix={<LockOutlined />}
                 placeholder="Password"
               />
