@@ -13,3 +13,4 @@ export const self = async () => {
 export const logout = async () => {
   return await api.post("/auth/logout");
 };
+
