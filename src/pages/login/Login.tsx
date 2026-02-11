@@ -15,8 +15,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import type { Credentials } from "../../types";
 import { login, self, logout } from "../../http/api";
 import { useAuthStore } from "../../store/store";
-
-import { usePermission } from "../../hooks/usePermission";
+import { UserRole } from "../../constants";
 
 const getSelf = async () => {
   const { data } = await self();
@@ -35,8 +34,6 @@ const successLogin = async () => {
 export default function LoginPage() {
   const { setUser } = useAuthStore();
   const [form] = Form.useForm();
-  const { isAllowed } = usePermission();
-
   const { refetch } = useQuery({
     queryKey: ["self"],
     queryFn: getSelf,
@@ -49,9 +46,8 @@ export default function LoginPage() {
     onSuccess: async () => {
       successLogin();
       const selfdata = await refetch();
-      if (!isAllowed(selfdata.data)) {
-        logout();
-        return;
+      if (selfdata.data.role === UserRole.CUSTOMER) {
+        await logout();
       }
       setUser(selfdata.data);
     },
