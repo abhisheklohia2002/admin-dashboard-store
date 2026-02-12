@@ -8,11 +8,13 @@ interface UserSearchProps {
   handleSearch: (value: string) => void;
   handleRole: (value: string) => void;
   handleStatus: (value: string) => void;
+  handleAddUser:()=>void
 }
 export default function UserFilter({
   handleSearch,
   handleRole,
   handleStatus,
+  handleAddUser
 }: UserSearchProps) {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState<Role | undefined>(undefined);
@@ -76,7 +78,9 @@ export default function UserFilter({
           md={8}
           style={{ display: "flex", justifyContent: "flex-end" }}
         >
-          <Button type="primary" icon={<PlusOutlined />}>
+          <Button 
+          onClick={handleAddUser}
+          type="primary" icon={<PlusOutlined />}>
             Add
           </Button>
         </Col>

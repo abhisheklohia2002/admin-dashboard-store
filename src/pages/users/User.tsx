@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Breadcrumb, Space, Table, type TableProps } from "antd";
+import {
+  Breadcrumb,
+  Button,
+  Drawer,
+  Space,
+  Table,
+  type TableProps,
+} from "antd";
 import { Link } from "react-router-dom";
 import { showUsers } from "../../http/api";
 import type { UserData } from "../../types";
@@ -67,33 +74,61 @@ export default function User() {
     queryFn: users,
     retry: false,
   });
-  const handleSearch=(value:string)=>[
-    console.log(value,'search')
-  ]
-  const handleRole=(value:string)=>[
-    console.log(value,'role')
-  ]
-  const handleStatus=(value:string)=>[
-    console.log(value,'role')
-  ]
+  const [isOpen, setisOpen] = useState<boolean>(false);
+  const handleSearch = (value: string) => [console.log(value, "search")];
+  const handleRole = (value: string) => [console.log(value, "role")];
+  const handleStatus = (value: string) => [console.log(value, "role")];
+  const handleAddUser = (): void => {
+    setisOpen(!isOpen);
+  };
   return (
     <>
-    <Space vertical 
-    size="middle"
-    style={{
-        width:'100%'
-    }}
-    >
-      <Breadcrumb
-        items={[{ title: <Link to="/">Dashboard</Link> }, { title: "Users" }]}
-      />
-      {/* <div>{isLoading && <div>Loading</div>}</div> */}
+      <Space
+        vertical
+        size="middle"
+        style={{
+          width: "100%",
+        }}
+      >
+        <Breadcrumb
+          items={[{ title: <Link to="/">Dashboard</Link> }, { title: "Users" }]}
+        />
+        {/* <div>{isLoading && <div>Loading</div>}</div> */}
 
-      <UserFilter handleSearch = {handleSearch} handleRole = {handleRole} handleStatus = {handleStatus} />
-      <div>
-        <Table<UserData>   columns={columns} dataSource={data?.data.msg ?? []} rowKey={"id"} />
-      </div>
-    </Space>
+        <UserFilter
+          handleSearch={handleSearch}
+          handleRole={handleRole}
+          handleStatus={handleStatus}
+          handleAddUser={handleAddUser}
+        />
+        <div>
+          <Table<UserData>
+            columns={columns}
+            dataSource={data?.data.msg ?? []}
+            rowKey={"id"}
+          />
+        </div>
+
+        <Drawer
+          title="Create user"
+          open={isOpen}
+          width={720}
+          destroyOnClose={true}
+          onClose={() => {
+            setisOpen(!isOpen);
+          }}
+          extra={
+            <Space>
+              <Button
+              onClick={()=>setisOpen(!isOpen)}
+              >Cancel</Button>
+              <Button
+              type="primary"
+              >Submit</Button>
+            </Space>
+          }
+        ></Drawer>
+      </Space>
     </>
   );
 }
