@@ -61,7 +61,8 @@ async function logoutUser() {
   return await logout();
 }
 
-const getMenuItems = (items: MenuItems[], role: string): MenuItem[]  => {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getMenuItems = (items: MenuItems[], role: string): any[]  => {
   if (role === UserRole.MANAGER) {
     return items.filter((item) => item.key !== "/user");
   }

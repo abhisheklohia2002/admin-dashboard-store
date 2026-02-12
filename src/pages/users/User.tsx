@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { showUsers } from "../../http/api";
 import type { UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
+import UserFilter from "./UserFilter";
 
 const users = async () => {
   return await showUsers();
@@ -61,11 +62,20 @@ const columns: TableProps<UserData>["columns"] = [
 ];
 
 export default function User() {
-  const { data, isLoading } = useQuery({
+  const { data } = useQuery({
     queryKey: ["user"],
     queryFn: users,
     retry: false,
   });
+  const handleSearch=(value:string)=>[
+    console.log(value,'search')
+  ]
+  const handleRole=(value:string)=>[
+    console.log(value,'role')
+  ]
+  const handleStatus=(value:string)=>[
+    console.log(value,'role')
+  ]
   return (
     <>
     <Space vertical 
@@ -77,9 +87,11 @@ export default function User() {
       <Breadcrumb
         items={[{ title: <Link to="/">Dashboard</Link> }, { title: "Users" }]}
       />
-      <div>{isLoading && <div>Loading</div>}</div>
+      {/* <div>{isLoading && <div>Loading</div>}</div> */}
+
+      <UserFilter handleSearch = {handleSearch} handleRole = {handleRole} handleStatus = {handleStatus} />
       <div>
-        <Table<UserData> columns={columns} dataSource={data?.data.msg ?? []} />
+        <Table<UserData>   columns={columns} dataSource={data?.data.msg ?? []} rowKey={"id"} />
       </div>
     </Space>
     </>
