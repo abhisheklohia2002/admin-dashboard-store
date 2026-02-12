@@ -5,7 +5,7 @@ import { useAuthStore } from '../store/store'
 export default function NonAuth() {
     const {user} = useAuthStore();
     if(user !== null){
-        return <Navigate to="/home" replace  />
+        return <Navigate to="/" replace  />
     }
   return (
     <div>

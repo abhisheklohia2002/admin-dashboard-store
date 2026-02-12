@@ -1,4 +1,4 @@
-import { Navigate, NavLink, Outlet } from "react-router-dom";
+import { Navigate, NavLink, Outlet, useLocation } from "react-router-dom";
 import Icon, { BellFilled } from "@ant-design/icons";
 import {
   Avatar,
@@ -28,7 +28,7 @@ const items = [
   {
     key: "/",
     icon: <Icon component={Home} />,
-    label: <NavLink to="/home">Home</NavLink>,
+    label: <NavLink to="/">Home</NavLink>,
   },
   {
     key: "/user",
@@ -57,6 +57,7 @@ async function logoutUser() {
 }
 export default function Dashboard() {
   const { user, logout: logoutFromStore } = useAuthStore();
+  const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer },
@@ -89,7 +90,7 @@ export default function Dashboard() {
 
           <Menu
             theme="light"
-            defaultSelectedKeys={["/"]}
+            selectedKeys={[location.pathname]}
             mode="inline"
             items={items}
           />
