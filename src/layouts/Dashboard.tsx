@@ -10,7 +10,7 @@ import {
   Space,
   theme,
 } from "antd";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Logo from "../components/icons/Logo";
 import { useAuthStore } from "../store/store";
 import Home from "../components/icons/Home";
@@ -24,7 +24,12 @@ import { UserRole } from "../constants";
 
 const { Sider, Header, Content, Footer } = Layout;
 
-const items = [
+interface MenuItems{
+    key:string,
+    icon:ReactNode,
+    label:ReactNode
+}
+const items:MenuItems[] = [
   {
     key: "/",
     icon: <Icon component={Home} />,
@@ -55,6 +60,15 @@ const items = [
 async function logoutUser() {
   return await logout();
 }
+
+const getMenuItems = (items: MenuItems[], role: string): MenuItem[]  => {
+  if (role === UserRole.MANAGER) {
+    return items.filter((item) => item.key !== "/user");
+  }
+  return items;
+};
+
+
 export default function Dashboard() {
   const { user, logout: logoutFromStore } = useAuthStore();
   const location = useLocation();
@@ -92,7 +106,7 @@ export default function Dashboard() {
             theme="light"
             selectedKeys={[location.pathname]}
             mode="inline"
-            items={items}
+            items={getMenuItems(items,user.role) ?? []}
           />
         </Sider>
         <Layout>
