@@ -17,3 +17,7 @@ export const logout = async () => {
 export const showUsers = async () => {
   return await api.get("/user");
 };
+
+export const allTenant = async () => {
+  return await api.get("/tenant");
+};

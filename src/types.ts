@@ -11,3 +11,10 @@ export interface UserData {
   role: string;
   id?:number;
 }
+
+export interface Tenants {
+  address: string;
+  name:string;
+  id:number;
+  createdAt:string;
+}

@@ -12,7 +12,7 @@ import { Link } from "react-router-dom";
 import { showUsers } from "../../http/api";
 import type { UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import UserFilter from "./UserFilter";
+import TableFilter from "../../shared/TableFilter";
 
 const users = async () => {
   return await showUsers();
@@ -95,7 +95,7 @@ export default function User() {
         />
         {/* <div>{isLoading && <div>Loading</div>}</div> */}
 
-        <UserFilter
+        <TableFilter
           handleSearch={handleSearch}
           handleRole={handleRole}
           handleStatus={handleStatus}
@@ -127,7 +127,10 @@ export default function User() {
               >Submit</Button>
             </Space>
           }
-        ></Drawer>
+        >
+            something is coming .....
+
+        </Drawer>
       </Space>
     </>
   );
