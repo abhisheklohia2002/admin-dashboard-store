@@ -20,6 +20,7 @@ import BasketIcon from "../components/icons/BasketIcon";
 import GiftIcon from "../components/icons/GiftIcon";
 import { useMutation } from "@tanstack/react-query";
 import { logout } from "../http/api";
+import { UserRole } from "../constants";
 
 const { Sider, Header, Content, Footer } = Layout;
 
@@ -69,6 +70,7 @@ export default function Dashboard() {
       return;
     },
   });
+ 
   if (user === null) {
     return <Navigate to="/auth/login" replace />;
   }
@@ -101,7 +103,14 @@ export default function Dashboard() {
             }}
           >
             <Flex gap={"middle"} align="start" justify="space-between">
-              <Badge text="Global" status="success" />
+              <Badge
+                text={
+                  user?.role === UserRole.ADMIN
+                    ? "You are Admin"
+                    : (user?.tenant?.name ?? "No tenant")
+                }
+                status="success"
+              />
               <Space size={16}>
                 <Badge dot={true}>
                   <BellFilled />
@@ -130,7 +139,7 @@ export default function Dashboard() {
               </Space>
             </Flex>
           </Header>
-          <Content style={{ margin: "0px 16px" }}>
+          <Content style={{ margin: "16px 16px" }}>
             <Outlet />
           </Content>
           <Footer style={{ textAlign: "center" }}>Mernspace pizza shop</Footer>

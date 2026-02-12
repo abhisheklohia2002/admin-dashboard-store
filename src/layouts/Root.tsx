@@ -21,7 +21,7 @@ export default function Root() {
   });
 
   useEffect(() => {
-    if (data) setUser(data);
+    if (data) setUser(data.user);
   }, [data, setUser]);
 
   if (isLoading) return <div>loading</div>;
