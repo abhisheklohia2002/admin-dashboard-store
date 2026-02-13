@@ -6,6 +6,7 @@ import {
   Drawer,
   Space,
   Table,
+  Form,
   type TableProps,
 } from "antd";
 import { Link } from "react-router-dom";
@@ -13,6 +14,7 @@ import { showUsers } from "../../http/api";
 import type { UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
+import UserForm from "./form/UserForm";
 
 const users = async () => {
   return await showUsers();
@@ -117,6 +119,9 @@ export default function User() {
           onClose={() => {
             setisOpen(!isOpen);
           }}
+         style={{
+          backgroundColor:""
+         }}
           extra={
             <Space>
               <Button
@@ -128,8 +133,9 @@ export default function User() {
             </Space>
           }
         >
-            something is coming .....
-
+          <Form layout="vertical">
+           <UserForm/>
+          </Form>
         </Drawer>
       </Space>
     </>

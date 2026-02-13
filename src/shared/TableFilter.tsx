@@ -16,7 +16,7 @@ export default function TableFilter({
   handleRole,
   handleStatus,
   handleAddUser,
-  type
+  type,
 }: UserSearchProps) {
   const [search, setSearch] = useState("");
   const [role, setRole] = useState<Role | undefined>(undefined);
@@ -83,7 +83,7 @@ export default function TableFilter({
 
         <Col
           xs={24}
-          md={8}
+          md={type !== "tenant" ? 8 : 16}
           style={{ display: "flex", justifyContent: "flex-end" }}
         >
           <Button
