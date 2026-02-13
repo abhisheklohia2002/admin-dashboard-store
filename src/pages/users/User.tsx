@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Breadcrumb,
@@ -17,17 +17,25 @@ import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
 import UserForm from "./form/UserForm";
 import { Pagination } from "../../constants";
+import { debounce } from "lodash";
 
 interface IQueryParms {
   perPage: number;
   currentPage: number;
 }
-
-const users = async (queryParms: IQueryParms) => {
-  const queryString = new URLSearchParams({
+const users = async (
+  queryParms: IQueryParms,
+  searchUser?: string,
+  searchRole?: string,
+) => {
+  const payload: Record<string, string> = {
     perPage: String(queryParms.perPage),
     currentPage: String(queryParms.currentPage),
-  }).toString();
+  };
+
+  if (searchUser?.trim()) payload.q = searchUser.trim();
+  if (searchRole?.trim()) payload.role = searchRole.trim();
+  const queryString = new URLSearchParams(payload).toString();
 
   return await showUsers(queryString);
 };
@@ -78,6 +86,8 @@ export default function User() {
   });
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [searchUser, setSearchUser] = useState<string>("");
+  const [searchRole, setSearchRole] = useState<string>("");
 
   const [user, setUser] = useState<UserData>({
     firstName: "",
@@ -90,10 +100,10 @@ export default function User() {
   });
 
   const { data: userData, isLoading } = useQuery({
-    queryKey: ["user", queryParam],
+    queryKey: ["user", queryParam, searchUser, searchRole],
     queryFn: ({ queryKey }) => {
       const [, qp] = queryKey as ["user", IQueryParms];
-      return users(qp);
+      return users(qp, searchUser, searchRole);
     },
     retry: false,
   });
@@ -121,8 +131,15 @@ export default function User() {
     },
   });
 
-  const handleSearch = (value: string) => console.log(value, "search");
-  const handleRole = (value: string) => console.log(value, "role");
+  const debounceSearch = useMemo(() => {
+    return debounce((value: string) => {
+      setSearchUser(value)
+    }, 1000);
+  }, []);
+  const handleSearch = (value: string) => {
+    debounceSearch(value);
+  };
+  const handleRole = (value: string) => setSearchRole(value);
   const handleStatus = (value: string) => console.log(value, "status");
 
   const handleAddUser = (): void => setIsOpen(true);
