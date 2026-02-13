@@ -61,6 +61,15 @@ const columns: TableProps<UserData>["columns"] = [
   { title: "Email", dataIndex: "email", key: "email" },
   { title: "Role", dataIndex: "role", key: "role" },
   {
+    title: "Restaurant",
+    dataIndex: "tenant",
+    key: "tenant",
+    render: (_text: string, record: UserData) => (
+      <div>{record.tenant?.name ?? "N/A"}</div>
+    ),
+  },
+
+  {
     title: "Actions",
     key: "action",
     render: (_, record: UserData) => (
@@ -133,7 +142,7 @@ export default function User() {
 
   const debounceSearch = useMemo(() => {
     return debounce((value: string) => {
-      setSearchUser(value)
+      setSearchUser(value);
     }, 1000);
   }, []);
   const handleSearch = (value: string) => {

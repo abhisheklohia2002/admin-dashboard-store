@@ -11,7 +11,8 @@ export interface UserData {
   role:string;
   id?:number;
   cPassword?:string;
-  tenantId?:number
+  tenantId?:number;
+  tenant?:Tenants | null
 }
 
 export interface Tenants {
