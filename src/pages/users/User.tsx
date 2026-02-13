@@ -11,14 +11,25 @@ import {
   message,
 } from "antd";
 import { Link } from "react-router-dom";
-import { showUsers , createUser } from "../../http/api";
+import { showUsers, createUser } from "../../http/api";
 import type { UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
 import UserForm from "./form/UserForm";
+import { Pagination } from "../../constants";
 
-const users = async () => {
-  return await showUsers();
+interface IQueryParms {
+  perPage: number;
+  currentPage: number;
+}
+
+const users = async (queryParms: IQueryParms) => {
+  const queryString = new URLSearchParams({
+    perPage: String(queryParms.perPage),
+    currentPage: String(queryParms.currentPage),
+  }).toString();
+
+  return await showUsers(queryString);
 };
 
 const createUsers = async (payload: UserData) => {
@@ -61,6 +72,10 @@ const columns: TableProps<UserData>["columns"] = [
 export default function User() {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+  const [queryParam, setQueryParam] = useState({
+    perPage: Pagination.PER_PAGE,
+    currentPage: 1,
+  });
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
 
@@ -75,8 +90,11 @@ export default function User() {
   });
 
   const { data: userData, isLoading } = useQuery({
-    queryKey: ["user"],
-    queryFn: users,
+    queryKey: ["user", queryParam],
+    queryFn: ({ queryKey }) => {
+      const [, qp] = queryKey as ["user", IQueryParms];
+      return users(qp);
+    },
     retry: false,
   });
 
@@ -116,11 +134,7 @@ export default function User() {
   };
 
   return (
-    <Space
-      direction="vertical"
-      size="middle"
-      style={{ width: "100%" }}
-    >
+    <Space direction="vertical" size="middle" style={{ width: "100%" }}>
       <Breadcrumb
         items={[{ title: <Link to="/">Dashboard</Link> }, { title: "Users" }]}
       />
@@ -135,8 +149,22 @@ export default function User() {
       <Table<UserData>
         loading={isLoading}
         columns={columns}
-        dataSource={userData?.data?.msg ?? []}
+        dataSource={userData?.data?.data ?? []}
         rowKey="id"
+        pagination={{
+          total: userData?.data?.count,
+          pageSize: queryParam.perPage,
+          current: queryParam.currentPage,
+          onChange: (page) => {
+            setQueryParam((prev) => {
+              return {
+                ...prev,
+                currentPage: page,
+              };
+            });
+            console.log(queryParam);
+          },
+        }}
       />
 
       <Drawer

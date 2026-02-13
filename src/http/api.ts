@@ -14,8 +14,8 @@ export const logout = async () => {
   return await api.post("/auth/logout");
 };
 
-export const showUsers = async () => {
-  return await api.get("/user");
+export const showUsers = async (query:string) => {
+  return await api.get(`/user?${query}`);
 };
 
 export const allTenant = async () => {
