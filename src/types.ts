@@ -8,10 +8,10 @@ export interface UserData {
   lastName: string;
   email: string;
   password: string;
-  role: number | string;
+  role:string;
   id?:number;
   cPassword?:string;
-  tenantId?:number | string
+  tenantId?:number
 }
 
 export interface Tenants {

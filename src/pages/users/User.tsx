@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Breadcrumb,
   Button,
@@ -8,9 +8,10 @@ import {
   Table,
   Form,
   type TableProps,
+  message,
 } from "antd";
 import { Link } from "react-router-dom";
-import { showUsers } from "../../http/api";
+import { showUsers , createUser } from "../../http/api";
 import type { UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
@@ -20,35 +21,26 @@ const users = async () => {
   return await showUsers();
 };
 
+const createUsers = async (payload: UserData) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { cPassword, ...body } = payload;
+  return await createUser(body);
+};
+
 const columns: TableProps<UserData>["columns"] = [
-  {
-    title: "ID",
-    dataIndex: "id",
-    key: "id",
-  },
+  { title: "ID", dataIndex: "id", key: "id" },
   {
     title: "Name",
-    dataIndex: `firstName`,
+    dataIndex: "firstName",
     key: "firstName",
-    render: (_text: string, record: UserData) => {
-      return (
-        <Link to={`/user/${record?.id}`}>
-          {record.firstName} {record.lastName}
-        </Link>
-      );
-    },
+    render: (_text: string, record: UserData) => (
+      <Link to={`/user/${record?.id}`}>
+        {record.firstName} {record.lastName}
+      </Link>
+    ),
   },
-  {
-    title: "Email",
-    dataIndex: "email",
-    key: "email",
-  },
-  {
-    title: "Role",
-    dataIndex: "role",
-    key: "role",
-  },
-
+  { title: "Email", dataIndex: "email", key: "email" },
+  { title: "Role", dataIndex: "role", key: "role" },
   {
     title: "Actions",
     key: "action",
@@ -56,14 +48,10 @@ const columns: TableProps<UserData>["columns"] = [
       <Space size="middle">
         <Link
           to={`/user/edit/${record.id}`}
-          style={{
-            textDecoration: "none",
-            color: "black",
-          }}
+          style={{ textDecoration: "none", color: "black" }}
         >
           <EditFilled />
         </Link>
-
         <DeleteFilled />
       </Space>
     ),
@@ -71,78 +59,116 @@ const columns: TableProps<UserData>["columns"] = [
 ];
 
 export default function User() {
-  const { data } = useQuery({
+  const queryClient = useQueryClient();
+  const [form] = Form.useForm();
+
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+
+  const [user, setUser] = useState<UserData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    cPassword: "",
+    role: "",
+    tenantId: 1,
+  });
+
+  const { data: userData, isLoading } = useQuery({
     queryKey: ["user"],
     queryFn: users,
     retry: false,
   });
-  const [isOpen, setisOpen] = useState<boolean>(false);
-  const handleSearch = (value: string) => [console.log(value, "search")];
-  const handleRole = (value: string) => [console.log(value, "role")];
-  const handleStatus = (value: string) => [console.log(value, "role")];
-  const handleAddUser = (): void => {
-    setisOpen(!isOpen);
+
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["createUser"],
+    mutationFn: createUsers,
+    onSuccess: async () => {
+      message.success("User created");
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      setIsOpen(false);
+      form.resetFields();
+      setUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        cPassword: "",
+        role: "",
+        tenantId: 1,
+      });
+    },
+    onError: () => {
+      message.error("Failed to create user");
+    },
+  });
+
+  const handleSearch = (value: string) => console.log(value, "search");
+  const handleRole = (value: string) => console.log(value, "role");
+  const handleStatus = (value: string) => console.log(value, "status");
+
+  const handleAddUser = (): void => setIsOpen(true);
+  const handleSubmitForm = (values: UserData): void => {
+    setUser(values);
+  };
+  const onFinish = () => {
+    mutate(user);
   };
 
-  const handleSubmitForm = (form:UserData):void =>{
-    console.log(form,'form')
-  }
-
   return (
-    <>
-      <Space
-        vertical
-        size="middle"
-        style={{
-          width: "100%",
-        }}
-      >
-        <Breadcrumb
-          items={[{ title: <Link to="/">Dashboard</Link> }, { title: "Users" }]}
-        />
-        {/* <div>{isLoading && <div>Loading</div>}</div> */}
+    <Space
+      direction="vertical"
+      size="middle"
+      style={{ width: "100%" }}
+    >
+      <Breadcrumb
+        items={[{ title: <Link to="/">Dashboard</Link> }, { title: "Users" }]}
+      />
 
-        <TableFilter
-          handleSearch={handleSearch}
-          handleRole={handleRole}
-          handleStatus={handleStatus}
-          handleAddUser={handleAddUser}
-        />
-        <div>
-          <Table<UserData>
-            columns={columns}
-            dataSource={data?.data.msg ?? []}
-            rowKey={"id"}
-          />
-        </div>
+      <TableFilter
+        handleSearch={handleSearch}
+        handleRole={handleRole}
+        handleStatus={handleStatus}
+        handleAddUser={handleAddUser}
+      />
 
-        <Drawer
-          title="Create user"
-          open={isOpen}
-          width={720}
-          destroyOnClose={true}
-          onClose={() => {
-            setisOpen(!isOpen);
-          }}
-         style={{
-          backgroundColor:""
-         }}
-          extra={
-            <Space>
-              <Button
-              onClick={()=>setisOpen(!isOpen)}
-              >Cancel</Button>
-              <Button
+      <Table<UserData>
+        loading={isLoading}
+        columns={columns}
+        dataSource={userData?.data?.msg ?? []}
+        rowKey="id"
+      />
+
+      <Drawer
+        title="Create user"
+        open={isOpen}
+        width={720}
+        destroyOnClose
+        onClose={() => setIsOpen(false)}
+        extra={
+          <Space>
+            <Button onClick={() => setIsOpen(false)} disabled={isPending}>
+              Cancel
+            </Button>
+            <Button
               type="primary"
-              >Submit</Button>
-            </Space>
-          }
+              onClick={() => form.submit()}
+              loading={isPending}
+            >
+              Submit
+            </Button>
+          </Space>
+        }
+      >
+        <Form
+          form={form}
+          initialValues={{ remember: true }}
+          onFinish={onFinish}
+          layout="vertical"
         >
-          <Form layout="vertical">
-           <UserForm handleSubmitForm = {handleSubmitForm}/>
-          </Form>
-        </Drawer>
-      </Space>
-    </>
+          <UserForm handleSubmitForm={handleSubmitForm} />
+        </Form>
+      </Drawer>
+    </Space>
   );
 }

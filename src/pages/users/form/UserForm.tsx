@@ -38,7 +38,7 @@ export default function UserForm({ handleSubmitForm }: UserForm) {
     password: "",
     cPassword: "",
     role: "",
-    tenantId: "",
+    tenantId: 1,
   });
 
   function onChangeRole(value: Role | undefined) {
