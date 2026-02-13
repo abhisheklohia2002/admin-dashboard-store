@@ -1,8 +1,13 @@
 import { Col, Input, Row, Form, Card, Select, Space } from "antd";
-import React from "react";
+import { useState } from "react";
 import { allTenant } from "../../../http/api";
 import { useQuery } from "@tanstack/react-query";
-import type { Tenants } from "../../../types";
+import type { Tenants, UserData } from "../../../types";
+import { LockOutlined } from "@ant-design/icons";
+type Role = "admin" | "manager" | "customer";
+interface UserForm {
+  handleSubmitForm: (data: UserData) => void;
+}
 
 const tenants = async () => {
   return await allTenant();
@@ -17,14 +22,51 @@ const tenantsDataSource = (data: Tenants[]) => {
   });
   return items;
 };
-export default function UserForm() {
+export default function UserForm({ handleSubmitForm }: UserForm) {
+  const [role, setRole] = useState<Role | undefined>(undefined);
+
   const { data } = useQuery({
     queryKey: ["tenants"],
     queryFn: tenants,
     onSuccess: () => {},
     retry: false,
   });
+  const [userForm, setUserForm] = useState<UserData>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    cPassword: "",
+    role: "",
+    tenantId: "",
+  });
 
+  function onChangeRole(value: Role | undefined) {
+    setRole(value);
+
+    const next = { ...userForm, role: value ?? "" };
+    setUserForm(next);
+    handleSubmitForm(next);
+  }
+
+   function onChangeTenant(value:number) {
+    const next = { ...userForm, tenantId: value ?? "" };
+    setUserForm(next);
+    handleSubmitForm(next);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const handleForm = (e: any) => {
+    // e.preventDefault();
+    const { name, value } = e.target;
+    setUserForm({
+      ...userForm,
+      [name]: value,
+    });
+    if (userForm) {
+      handleSubmitForm(userForm);
+      return;
+    }
+  };
   return (
     <Row>
       <Col span={24} title="Basic info">
@@ -38,30 +80,98 @@ export default function UserForm() {
           <Card>
             <Row gutter={"12px"}>
               <Col span={12}>
-                <Form.Item label="First name" name="firstName">
-                  <Input size="large" placeholder="" />
+                <Form.Item
+                  rules={[
+                    { required: true, message: "Please input your Firstname" },
+                  ]}
+                  label="First name"
+                  name="firstName"
+                >
+                  <Input
+                    onChange={handleForm}
+                    value={userForm.firstName}
+                    name="firstName"
+                    size="large"
+                    placeholder=""
+                  />
                 </Form.Item>
               </Col>
               <Col span={12}>
-                <Form.Item label="Last name" name="lastName">
-                  <Input size="large" />
+                <Form.Item
+                  rules={[
+                    { required: true, message: "Please input your LastName" },
+                  ]}
+                  label="Last name"
+                  name="lastName"
+                >
+                  <Input
+                    value={userForm.lastName}
+                    name="lastName"
+                    onChange={handleForm}
+                    size="large"
+                  />
                 </Form.Item>
               </Col>
             </Row>
             <Row gutter={"12px"}>
               <Col span={12}>
-                <Form.Item label="Email" name="email">
-                  <Input size="large" />
+                <Form.Item
+                  rules={[
+                    { required: true, message: "Please input your Email" },
+                  ]}
+                  label="Email"
+                  name="email"
+                >
+                  <Input
+                    value={userForm.email}
+                    name="email"
+                    onChange={handleForm}
+                    size="large"
+                  />
                 </Form.Item>
               </Col>
             </Row>
           </Card>
 
           <Card title="Security info">
-            <Row>
+            <Row gutter={"12px"}>
               <Col span={12}>
-                <Form.Item label="Password" name="password">
-                  <Input size="large" type="password" />
+                <Form.Item
+                  rules={[
+                    { required: true, message: "Please input your password" },
+                  ]}
+                  label="Password"
+                  name="password"
+                >
+                  <Input
+                    onChange={handleForm}
+                    prefix={<LockOutlined />}
+                    size="large"
+                    type="password"
+                    value={userForm.password}
+                    name="password"
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  rules={[
+                    {
+                      required: true,
+                      message: "Please input your Confirm password",
+                    },
+                  ]}
+                  label="Confirm password"
+                  name="confirm_password"
+                >
+                  <Input
+                    prefix={<LockOutlined />}
+                    size="large"
+                    type="password"
+                    onChange={handleForm}
+                    value={userForm.cPassword}
+                    name="cPassword"
+                  />
                 </Form.Item>
               </Col>
             </Row>
@@ -70,13 +180,19 @@ export default function UserForm() {
           <Card title="Role">
             <Row gutter={"12px"}>
               <Col span={12}>
-                <Form.Item label="role" name="role">
+                <Form.Item
+                  rules={[
+                    { required: true, message: "Please input your Role" },
+                  ]}
+                  label="role"
+                  name="role"
+                >
                   <Select
                     size="large"
                     placeholder="Select role"
                     allowClear
-                    //   value={role}
-                    //   onChange={(v) => onChangeRole(v)}
+                    value={role}
+                    onChange={(v) => onChangeRole(v)}
                     style={{ width: "100%" }}
                     options={[
                       { value: "admin", label: "Admin" },
@@ -88,13 +204,19 @@ export default function UserForm() {
               </Col>
 
               <Col span={12}>
-                <Form.Item label="Tenant" name="tenantId">
+                <Form.Item
+                  rules={[
+                    { required: true, message: "Please input your Tenant" },
+                  ]}
+                  label="Tenant"
+                  name="tenantId"
+                >
                   <Select
                     size="large"
                     placeholder="Select Tenant"
                     allowClear
-                    //   value={role}
-                    //   onChange={(v) => onChangeRole(v)}
+                    value={userForm.tenantId}
+                    onChange={(v)=>onChangeTenant(v)}
                     style={{ width: "100%" }}
                     options={tenantsDataSource(data?.data?.tenants ?? [])}
                   />

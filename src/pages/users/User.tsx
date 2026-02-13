@@ -83,6 +83,11 @@ export default function User() {
   const handleAddUser = (): void => {
     setisOpen(!isOpen);
   };
+
+  const handleSubmitForm = (form:UserData):void =>{
+    console.log(form,'form')
+  }
+
   return (
     <>
       <Space
@@ -134,7 +139,7 @@ export default function User() {
           }
         >
           <Form layout="vertical">
-           <UserForm/>
+           <UserForm handleSubmitForm = {handleSubmitForm}/>
           </Form>
         </Drawer>
       </Space>
