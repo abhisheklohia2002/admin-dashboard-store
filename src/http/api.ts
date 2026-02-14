@@ -18,8 +18,8 @@ export const showUsers = async (query:string) => {
   return await api.get(`/user?${query}`);
 };
 
-export const allTenant = async () => {
-  return await api.get("/tenant");
+export const allTenant = async (query:string) => {
+  return await api.get(`/tenant?${query}`);
 };
 
 export const createUser = async (data:UserData) => {

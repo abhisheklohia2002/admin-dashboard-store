@@ -12,17 +12,14 @@ import {
 } from "antd";
 import { Link } from "react-router-dom";
 import { showUsers, createUser } from "../../http/api";
-import type { UserData } from "../../types";
+import type { IQueryParms, UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
 import UserForm from "./form/UserForm";
 import { Pagination } from "../../constants";
 import { debounce } from "lodash";
 
-interface IQueryParms {
-  perPage: number;
-  currentPage: number;
-}
+
 const users = async (
   queryParms: IQueryParms,
   searchUser?: string,
@@ -188,7 +185,6 @@ export default function User() {
                 currentPage: page,
               };
             });
-            console.log(queryParam);
           },
         }}
       />

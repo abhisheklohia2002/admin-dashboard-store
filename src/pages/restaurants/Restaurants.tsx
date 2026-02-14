@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { allTenant, createTenants } from "../../http/api";
 import {
   Breadcrumb,
@@ -12,11 +12,12 @@ import {
   type TableProps,
 } from "antd";
 import { Link } from "react-router-dom";
-import type { ITenantForm, Tenants } from "../../types";
+import type { IQueryParms, ITenantForm, Tenants } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
 import RestaurantForm from "./RestaurantForm";
-
+import { Pagination } from "../../constants";
+import { debounce } from "lodash";
 const columns: TableProps<Tenants>["columns"] = [
   {
     title: "ID",
@@ -67,8 +68,15 @@ const columns: TableProps<Tenants>["columns"] = [
   },
 ];
 
-const tenants = async () => {
-  return await allTenant();
+const tenants = async (queryParams: IQueryParms,searchRestaurant?:string) => {
+  const payload: Record<string, string> = {
+    perPage: String(queryParams.perPage),
+    currentPage: String(queryParams.currentPage),
+  };
+  if (searchRestaurant?.trim()) payload.q = searchRestaurant.trim();
+  const queryString = new URLSearchParams(payload).toString();
+
+  return await allTenant(queryString);
 };
 
 const createTenant = async (data: ITenantForm) => {
@@ -78,16 +86,26 @@ const createTenant = async (data: ITenantForm) => {
 export default function Restaurants() {
   const queryClient = useQueryClient();
   const [form] = Form.useForm();
+  const [searchRestaurant, setSearchRestaurant] = useState<string>("");
 
+  const [queryParam, setQueryParam] = useState({
+    perPage: Pagination.PER_PAGE,
+    currentPage: 1,
+  });
   const [isOpen, setisOpen] = useState<boolean>(false);
   const [tenantStore, setTenantStore] = useState<ITenantForm>({
     name: "",
     address: "",
   });
   const { data } = useQuery({
-    queryKey: ["tenants"],
-    queryFn: tenants,
-    onSuccess: () => {},
+    queryKey: ["tenants", queryParam,searchRestaurant],
+    queryFn: ({ queryKey }) => {
+      const [, qp] = queryKey as ["tenants", IQueryParms];
+      return tenants(qp,searchRestaurant);
+    },
+    onSuccess: () => {
+      console.log(data, "data");
+    },
     retry: false,
   });
 
@@ -108,7 +126,16 @@ export default function Restaurants() {
       message.error("Failed to Tenant user");
     },
   });
-  const handleSearch = (value: string) => [console.log(value, "search")];
+
+  const debounceSearch = useMemo(() => {
+    return debounce((value: string) => {
+      setSearchRestaurant(value);
+    }, 1000);
+  }, []);
+
+  const handleSearch = (value: string) => {
+    debounceSearch(value);
+  };
   const handleAddUser = (): void => {
     setisOpen(!isOpen);
   };
@@ -143,8 +170,21 @@ export default function Restaurants() {
       <div>
         <Table<Tenants>
           columns={columns}
-          dataSource={data?.data.tenants ?? []}
+          dataSource={data?.data.data ?? []}
           rowKey={"id"}
+          pagination={{
+            total: data?.data?.count,
+            pageSize: queryParam.perPage,
+            current: queryParam.currentPage,
+            onChange: (page) => {
+              setQueryParam((prev) => {
+                return {
+                  ...prev,
+                  currentPage: page,
+                };
+              });
+            },
+          }}
         />
       </div>
 

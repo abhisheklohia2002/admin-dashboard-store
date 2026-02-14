@@ -7,6 +7,7 @@ import {
   Flex,
   Layout,
   Menu,
+  message,
   Space,
   theme,
 } from "antd";
@@ -36,7 +37,7 @@ const items:MenuItems[] = [
     label: <NavLink to="/">Home</NavLink>,
   },
   {
-    key: "/user",
+    key: "/users",
     icon: <Icon component={UserIcon} />,
     label: <NavLink to="/users">Users</NavLink>,
   },
@@ -72,7 +73,7 @@ const getMenuItems = (items: MenuItems[], role: string): any[]  => {
 
 export default function Dashboard() {
   const { user, logout: logoutFromStore } = useAuthStore();
-  const location = useLocation();
+  const loaction = useLocation()
   const [collapsed, setCollapsed] = useState(false);
   const {
     token: { colorBgContainer },
@@ -81,14 +82,14 @@ export default function Dashboard() {
     mutationKey: ["logout"],
     mutationFn: logoutUser,
     onSuccess: async () => {
-      console.log("logout successfully");
+      message.success('logout successfully')
       logoutFromStore();
       return;
     },
   });
  
   if (user === null) {
-    return <Navigate to="/auth/login" replace />;
+    return <Navigate to={`/auth/login?returnTo=${loaction.pathname}`} replace />;
   }
   return (
     <div>
@@ -105,7 +106,7 @@ export default function Dashboard() {
 
           <Menu
             theme="light"
-            selectedKeys={[location.pathname]}
+            defaultSelectedKeys={[location.pathname]}
             mode="inline"
             items={getMenuItems(items,user.role) ?? []}
           />

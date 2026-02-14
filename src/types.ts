@@ -27,3 +27,7 @@ export interface ITenantForm {
   name: string;
   address: string;
 }
+export interface IQueryParms {
+  perPage: number;
+  currentPage: number;
+}
