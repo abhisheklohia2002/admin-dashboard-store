@@ -1,4 +1,4 @@
-import type { Credentials, UserData } from "../types";
+import type { Credentials, ITenantForm, UserData } from "../types";
 import api from "./client";
 
 export const login = async (credentials: Credentials) => {
@@ -24,4 +24,8 @@ export const allTenant = async () => {
 
 export const createUser = async (data:UserData) => {
   return await api.post("/user",data);
+};
+
+export const createTenants = async (data:ITenantForm) => {
+  return await api.post("/tenant",data);
 };

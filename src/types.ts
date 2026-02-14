@@ -21,3 +21,9 @@ export interface Tenants {
   id:number;
   createdAt:string;
 }
+
+
+export interface ITenantForm {
+  name: string;
+  address: string;
+}
