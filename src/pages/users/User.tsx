@@ -1,4 +1,5 @@
-import React, { useMemo, useState } from "react";
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+import React, { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Breadcrumb,
@@ -11,14 +12,13 @@ import {
   message,
 } from "antd";
 import { Link } from "react-router-dom";
-import { showUsers, createUser } from "../../http/api";
+import { showUsers, createUser, updateUser } from "../../http/api";
 import type { IQueryParms, UserData } from "../../types";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
 import TableFilter from "../../shared/TableFilter";
 import UserForm from "./form/UserForm";
-import { Pagination } from "../../constants";
+import { Pagination, UserRole } from "../../constants";
 import { debounce } from "lodash";
-
 
 const users = async (
   queryParms: IQueryParms,
@@ -41,6 +41,11 @@ const createUsers = async (payload: UserData) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { cPassword, ...body } = payload;
   return await createUser(body);
+};
+const updateUsers = async (payload: UserData) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { cPassword, ...body } = payload;
+  return await updateUser(body);
 };
 
 const columns: TableProps<UserData>["columns"] = [
@@ -65,22 +70,6 @@ const columns: TableProps<UserData>["columns"] = [
       <div>{record.tenant?.name ?? "N/A"}</div>
     ),
   },
-
-  {
-    title: "Actions",
-    key: "action",
-    render: (_, record: UserData) => (
-      <Space size="middle">
-        <Link
-          to={`/user/edit/${record.id}`}
-          style={{ textDecoration: "none", color: "black" }}
-        >
-          <EditFilled />
-        </Link>
-        <DeleteFilled />
-      </Space>
-    ),
-  },
 ];
 
 export default function User() {
@@ -94,6 +83,8 @@ export default function User() {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const [searchUser, setSearchUser] = useState<string>("");
   const [searchRole, setSearchRole] = useState<string>("");
+  const [currentEditUser, setCurrentEditUser] = useState<UserData | null>(null);
+  const [editUser, setEditUser] = useState<boolean>(false);
 
   const [user, setUser] = useState<UserData>({
     firstName: "",
@@ -103,7 +94,20 @@ export default function User() {
     cPassword: "",
     role: "",
     tenantId: 1,
+    id: 0,
   });
+
+  useEffect(() => {
+    if (currentEditUser) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEditUser(true);
+      setIsOpen(true);
+      form.setFieldsValue({
+        ...currentEditUser,
+        tenantId: currentEditUser.tenant?.id,
+      });
+    }
+  }, [currentEditUser,form]);
 
   const { data: userData, isLoading } = useQuery({
     queryKey: ["user", queryParam, searchUser, searchRole],
@@ -114,7 +118,7 @@ export default function User() {
     retry: false,
   });
 
-  const { mutate, isPending } = useMutation({
+  const createUser = useMutation({
     mutationKey: ["createUser"],
     mutationFn: createUsers,
     onSuccess: async () => {
@@ -137,6 +141,29 @@ export default function User() {
     },
   });
 
+  const updateUser = useMutation({
+    mutationKey: ["updateUser"],
+    mutationFn: updateUsers,
+    onSuccess: async () => {
+      message.success("Update user");
+      await queryClient.invalidateQueries({ queryKey: ["user"] });
+      setIsOpen(false);
+      form.resetFields();
+      setUser({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        cPassword: "",
+        role: "",
+        tenantId: 1,
+      });
+    },
+    onError: () => {
+      message.error("Failed to update user");
+    },
+  });
+
   const debounceSearch = useMemo(() => {
     return debounce((value: string) => {
       setSearchUser(value);
@@ -153,7 +180,31 @@ export default function User() {
     setUser(values);
   };
   const onFinish = () => {
-    mutate(user);
+    const payload = {
+      id: currentEditUser?.id,
+      firstName: user?.firstName ? user?.firstName : currentEditUser?.firstName,
+      lastName: user?.lastName ? user?.lastName : currentEditUser?.lastName,
+      email: user?.email ? user?.email : currentEditUser?.email,
+      role: user?.role ? user?.role : currentEditUser?.role,
+      tenant: user?.tenantId ? user?.tenantId : currentEditUser?.tenant?.id,
+    };
+
+    console.log(payload,'payload')
+    console.log(user,"user")
+    console.log(currentEditUser,'current')
+    !editUser
+      ? createUser.mutate(user)
+      : updateUser.mutate({
+          ...payload,
+          tenant: payload.role !== UserRole.CUSTOMER ? payload.tenant : null,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        } as any);
+  };
+  const handleClose = () => {
+    setIsOpen(false);
+    setEditUser(false);
+    setCurrentEditUser(null);
+    form.resetFields();
   };
 
   return (
@@ -169,9 +220,27 @@ export default function User() {
         handleAddUser={handleAddUser}
       />
 
-      <Table<UserData>
+      <Table<UserData | undefined>
         loading={isLoading}
-        columns={columns}
+        columns={[
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ...(columns as any),
+          {
+            title: "Actions",
+            key: "action",
+            render: (_, record: UserData) => (
+              <Space size="middle">
+                <EditFilled
+                  onClick={() => {
+                    setIsOpen(true);
+                    setCurrentEditUser(record);
+                  }}
+                />
+                <DeleteFilled />
+              </Space>
+            ),
+          },
+        ]}
         dataSource={userData?.data?.data ?? []}
         rowKey="id"
         pagination={{
@@ -190,20 +259,23 @@ export default function User() {
       />
 
       <Drawer
-        title="Create user"
+        title={!editUser ? "Create user" : "Update user"}
         open={isOpen}
         width={720}
         destroyOnClose
-        onClose={() => setIsOpen(false)}
+        onClose={handleClose}
         extra={
           <Space>
-            <Button onClick={() => setIsOpen(false)} disabled={isPending}>
+            <Button
+              onClick={() => setIsOpen(false)}
+              disabled={createUser.isPending}
+            >
               Cancel
             </Button>
             <Button
               type="primary"
               onClick={() => form.submit()}
-              loading={isPending}
+              loading={createUser.isPending}
             >
               Submit
             </Button>
@@ -216,7 +288,9 @@ export default function User() {
           onFinish={onFinish}
           layout="vertical"
         >
-          <UserForm handleSubmitForm={handleSubmitForm} />
+          <UserForm handleSubmitForm={handleSubmitForm} editUser={editUser}
+          currentEditUser = {currentEditUser}
+          />
         </Form>
       </Drawer>
     </Space>
