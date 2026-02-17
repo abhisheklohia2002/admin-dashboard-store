@@ -136,7 +136,7 @@ export default function Restaurants() {
   const handleSearch = (value: string) => {
     debounceSearch(value);
   };
-  const handleAddUser = (): void => {
+  const handleAdd = (): void => {
     setisOpen(!isOpen);
   };
 
@@ -162,10 +162,11 @@ export default function Restaurants() {
 
       <TableFilter
         handleSearch={handleSearch}
-        handleAddUser={handleAddUser}
+        handleAdd={handleAdd}
         handleRole={() => {}}
         handleStatus={() => {}}
-        type="tenant"
+       hide={["role", "status","tenant","category"]}
+       fullWidth = {false}
       />
       <div>
         <Table<Tenants>

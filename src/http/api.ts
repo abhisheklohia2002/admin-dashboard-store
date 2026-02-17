@@ -1,36 +1,36 @@
 import type { Credentials, ITenantForm, UserData } from "../types";
 import api from "./client";
-
+const AUTH_SERVICE = "/api/auth"
 export const login = async (credentials: Credentials) => {
-  return await api.post("/auth/login", credentials);
+  return await api.post(`${AUTH_SERVICE}/auth/login`, credentials);
 };
 
 export const self = async () => {
-  return await api.get("/auth/self");
+  return await api.get(`${AUTH_SERVICE}/auth/self`);
 };
 
 export const logout = async () => {
-  return await api.post("/auth/logout");
+  return await api.post(`${AUTH_SERVICE}/auth/logout`);
 };
 
 export const showUsers = async (query: string) => {
-  return await api.get(`/user?${query}`);
+  return await api.get(`${AUTH_SERVICE}/user?${query}`);
 };
 
 export const allTenant = async (query?: string) => {
   if (query) {
-    return await api.get(`/tenant?${query}`);
+    return await api.get(`${AUTH_SERVICE}/tenant?${query}`);
   }
-  return await api.get(`/tenant`);
+  return await api.get(`${AUTH_SERVICE}/tenant`);
 };
 
 export const createUser = async (data: UserData) => {
-  return await api.post("/user", data);
+  return await api.post(`${AUTH_SERVICE}/user`, data);
 };
 
 export const updateUser = async (data: UserData) => {
-  return await api.put(`/user/${data.id}`, data);
+  return await api.put(`${AUTH_SERVICE}/user/${data.id}`, data);
 };
 export const createTenants = async (data: ITenantForm) => {
-  return await api.post("/tenant", data);
+  return await api.post(`${AUTH_SERVICE}/tenant`, data);
 };

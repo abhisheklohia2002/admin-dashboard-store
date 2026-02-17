@@ -175,7 +175,7 @@ export default function User() {
   const handleRole = (value: string) => setSearchRole(value);
   const handleStatus = (value: string) => console.log(value, "status");
 
-  const handleAddUser = (): void => setIsOpen(true);
+  const handleAdd = (): void => setIsOpen(true);
   const handleSubmitForm = (values: UserData): void => {
     setUser(values);
   };
@@ -217,7 +217,8 @@ export default function User() {
         handleSearch={handleSearch}
         handleRole={handleRole}
         handleStatus={handleStatus}
-        handleAddUser={handleAddUser}
+        handleAdd={handleAdd}
+        hide={['tenant',"category"]}
       />
 
       <Table<UserData | undefined>
