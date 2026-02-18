@@ -2,8 +2,8 @@ import { PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
 import { Button, Card, Col, Input, Row, Select } from "antd";
 import React, { useState } from "react";
-import type { IQueryParms, Tenants } from "../types";
-import { allTenant } from "../http/api";
+import type { ICategory, IQueryParms, Tenants } from "../types";
+import { allTenant, getCategories } from "../http/api";
 
 type Role = "admin" | "manager" | "customer";
 type Status = "ban" | "active";
@@ -28,6 +28,9 @@ const tenants = async (queryParams: IQueryParms) => {
 
   return await allTenant(queryString);
 };
+const getCategory = async()=>{
+  return await getCategories()
+}
 
 export default function TableFilter({
   handleSearch = () => {},
@@ -55,9 +58,13 @@ export default function TableFilter({
         currentPage: 1,
       });
     },
-    onSuccess: () => {
-      console.log(data?.data?.data, "data");
-    },
+    retry: false,
+  });
+
+
+    const { data:categories } = useQuery({
+    queryKey: ["category"],
+    queryFn:getCategory,
     retry: false,
   });
 
@@ -165,9 +172,9 @@ export default function TableFilter({
               value={category}
               onChange={(v) => onChangCategory(v)}
               style={{ width: "100%" }}
-              options={data?.data?.data?.map((elem: Tenants) => {
+              options={categories?.data?.map((elem: ICategory) => {
                 return {
-                  value: elem.id,
+                  value: elem._id,
                   label: elem.name,
                 };
               })}

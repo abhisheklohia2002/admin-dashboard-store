@@ -31,3 +31,14 @@ export interface IQueryParms {
   perPage: number;
   currentPage: number;
 }
+export interface IProducts{
+  name:string,
+  description:string,
+  isPublished:boolean,
+  createdAt:string,
+  image:string
+}
+export interface ICategory{
+  _id:string,
+  name:string
+}

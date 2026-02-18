@@ -188,10 +188,6 @@ export default function User() {
       role: user?.role ? user?.role : currentEditUser?.role,
       tenant: user?.tenantId ? user?.tenantId : currentEditUser?.tenant?.id,
     };
-
-    console.log(payload,'payload')
-    console.log(user,"user")
-    console.log(currentEditUser,'current')
     !editUser
       ? createUser.mutate(user)
       : updateUser.mutate({

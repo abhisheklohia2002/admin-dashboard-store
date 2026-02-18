@@ -1,6 +1,7 @@
 import type { Credentials, ITenantForm, UserData } from "../types";
 import api from "./client";
 const AUTH_SERVICE = "/api/auth"
+const CATALOG_SERVICE = "/api/catalog"
 export const login = async (credentials: Credentials) => {
   return await api.post(`${AUTH_SERVICE}/auth/login`, credentials);
 };
@@ -33,4 +34,15 @@ export const updateUser = async (data: UserData) => {
 };
 export const createTenants = async (data: ITenantForm) => {
   return await api.post(`${AUTH_SERVICE}/tenant`, data);
+};
+
+
+//categlog service 
+
+export const getCategories = async()=>{
+  return await api.get(`${CATALOG_SERVICE}/category/`)
+}
+
+export const showProduct = async(query: string) => {
+  return await api.get(`${CATALOG_SERVICE}/product?${query}`);
 };
