@@ -46,3 +46,14 @@ export const getCategories = async()=>{
 export const showProduct = async(query: string) => {
   return await api.get(`${CATALOG_SERVICE}/product?${query}`);
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const createProduct = async(data:FormData) => {
+  return await api.post(`${CATALOG_SERVICE}/product`,data,
+    {
+       headers: {
+      "Content-Type": undefined, 
+    },
+    }
+  );
+};

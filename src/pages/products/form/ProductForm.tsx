@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   Col,
@@ -20,11 +20,23 @@ import Pricing from "./Pricing";
 import Attributes from "./Attributes";
 // import ProductImage from "./ProductImage";
 
+type PriceConfigurationValue = {
+  priceType: string;
+  availableOptions: Record<string, number>;
+};
+type AttributeItem = { name: string; value: string | boolean | number };
+type ProductEditPayload = {
+  attributes?: AttributeItem[];
+};
+type PriceConfiguration = Record<string, PriceConfigurationValue>;
 interface ProductFormProps {
   onCategoryChange?: (categoryId?: string) => void;
   onRestaurantChange?: (tenantId?: string) => void;
   onPublishChange?: (isPublish: boolean) => void;
   onProductInfoChange?: (info: { name: string; description: string }) => void;
+  onProductImageChange?: (url: string, file: File) => void;
+  onPriceChange?: (info: PriceConfiguration) => void;
+  onAttributionChange?: (info: ProductEditPayload) => void;
 }
 
 const getCategory = async () => {
@@ -45,13 +57,17 @@ export default function ProductForm({
   onRestaurantChange,
   onPublishChange,
   onProductInfoChange,
+  onProductImageChange,
+  onPriceChange,
+  onAttributionChange,
 }: ProductFormProps) {
   const { user } = useAuthStore();
   const [tenant, setTenant] = useState<string | undefined>(undefined);
-
   const [selectedCategoryId, setSelectedCategoryId] = useState<
     string | undefined
   >(undefined);
+
+  const [priceConfig, setPriceConfig] = useState<PriceConfiguration>({});
 
   const [productInfo, setProductInfo] = useState({
     name: "",
@@ -99,6 +115,21 @@ export default function ProductForm({
       return next;
     });
   };
+
+  const handleImageChange = (url: string, file: File): void => {
+    onProductImageChange?.(url, file);
+  };
+
+  const onAttributesChange = (payload: {
+    enabled: boolean;
+    attributes: { name: "Spiciness"; value: "Less" | "Medium" | "Hot" }[];
+  }) => {
+    onAttributionChange?.(payload)
+  };
+
+  useEffect(() => {
+    onPriceChange?.(priceConfig);
+  }, [priceConfig]);
 
   return (
     <Row>
@@ -173,10 +204,7 @@ export default function ProductForm({
           <Card title="Product image" bordered={false}>
             <Row gutter={20}>
               <Col span={12}>
-                <ProductImageUploader />
-                <Typography.Text type="secondary">
-                  Add your image uploader component here.
-                </Typography.Text>
+                <ProductImageUploader onImageChange={handleImageChange} />
               </Col>
             </Row>
           </Card>
@@ -213,9 +241,9 @@ export default function ProductForm({
           )}
 
           {selectedCategoryId && (
-            <Pricing />
+            <Pricing setPriceConfiguation={setPriceConfig} />
           )}
-              {selectedCategoryId && <Attributes  />}
+          {selectedCategoryId && <Attributes onChange={onAttributesChange} />}
 
           <Card title="Other properties" bordered={false}>
             <Row gutter={24}>

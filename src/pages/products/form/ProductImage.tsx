@@ -1,65 +1,72 @@
-import React, { useState } from 'react';
-import { LoadingOutlined, PlusOutlined } from '@ant-design/icons';
-import { Flex, message, Upload } from 'antd';
-import type { GetProp, UploadProps } from 'antd';
+import React, { useState } from "react";
+import { LoadingOutlined, PlusOutlined } from "@ant-design/icons";
+import { Flex, message, Upload } from "antd";
+import type { GetProp, UploadProps } from "antd";
+import type { ProductImageUploaderProps } from "../../../types";
 
-type FileType = Parameters<GetProp<UploadProps, 'beforeUpload'>>[0];
+type FileType = Parameters<GetProp<UploadProps, "beforeUpload">>[0];
 
 const getBase64 = (img: FileType, callback: (url: string) => void) => {
   const reader = new FileReader();
-  reader.addEventListener('load', () => callback(reader.result as string));
+  reader.addEventListener("load", () => callback(reader.result as string));
   reader.readAsDataURL(img);
 };
 
-const beforeUpload = (file: FileType) => {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png';
-  if (!isJpgOrPng) {
-    message.error('You can only upload JPG/PNG file!');
-  }
+const validateFile = (file: FileType) => {
+  const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
+  if (!isJpgOrPng) message.error("You can only upload JPG/PNG file!");
+
   const isLt2M = file.size / 1024 / 1024 < 2;
-  if (!isLt2M) {
-    message.error('Image must smaller than 2MB!');
-  }
+  if (!isLt2M) message.error("Image must smaller than 2MB!");
+
   return isJpgOrPng && isLt2M;
 };
 
-const ProductImageUploader: React.FC = () => {
+const ProductImageUploader: React.FC<ProductImageUploaderProps> = ({
+  onImageChange,
+}) => {
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState<string>();
 
-  const handleChange: UploadProps['onChange'] = (info) => {
-    if (info.file.status === 'uploading') {
+  const uploaderProps: UploadProps = {
+    name: "avatar",
+    listType: "picture-card",
+    className: "avatar-uploader",
+    showUploadList: false,
+
+    beforeUpload: (file) => {
+      const ok = validateFile(file as FileType);
+      if (!ok) return Upload.LIST_IGNORE;
+
       setLoading(true);
-      return;
-    }
-    if (info.file.status === 'done') {
-      getBase64(info.file.originFileObj as FileType, (url) => {
+
+      getBase64(file as FileType, (url) => {
         setLoading(false);
         setImageUrl(url);
+        onImageChange?.(url, file as unknown as File);
       });
-    }
+
+      return false; 
+    },
   };
 
   const uploadButton = (
-    <button style={{ border: 0, background: 'none' }} type="button">
+    <div style={{ border: 0, background: "none" }}>
       {loading ? <LoadingOutlined /> : <PlusOutlined />}
       <div style={{ marginTop: 8 }}>Upload</div>
-    </button>
+    </div>
   );
 
   return (
     <Flex gap="middle" wrap>
-      <Upload
-        name="avatar"
-        listType="picture-card"
-        className="avatar-uploader"
-        showUploadList={false}
-        action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
-        beforeUpload={beforeUpload}
-        onChange={handleChange}
-      >
+      <Upload {...uploaderProps}>
         {imageUrl ? (
-          <img draggable={false} src={imageUrl} alt="avatar" style={{ width: '100%' }} />
+          <img
+            draggable={false}
+            src={imageUrl}
+            alt="avatar"
+            style={{ width: "100%" }}
+          />
         ) : (
           uploadButton
         )}

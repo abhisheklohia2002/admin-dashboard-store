@@ -8,15 +8,16 @@ type PriceConfigurationValue = {
 
 type PriceConfiguration = Record<string, PriceConfigurationValue>;
 
-export default function Pricing() {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export default function Pricing({setPriceConfiguation}:any) {
   const [priceConfig, setPriceConfig] = useState<PriceConfiguration>({
     Size: {
       priceType: "base",
-      availableOptions: { Small: 199, Medium: 299, Large: 399 },
+      availableOptions: { Small: 0, Medium: 0, Large: 0 },
     },
     Crust: {
       priceType: "aditional",
-      availableOptions: { Thin: 0, "Cheese Burst": 50 },
+      availableOptions: { Thin: 0, "Cheese Burst": 0 },
     },
   });
 
@@ -33,6 +34,8 @@ export default function Pricing() {
         },
       },
     }));
+
+    setPriceConfiguation(priceConfig)
   };
 
   return (

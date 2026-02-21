@@ -10,6 +10,15 @@ const api = axios.create({
   },
 });
 
+api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete config.headers?.["Content-Type"];
+  } else {
+    config.headers = config.headers ?? {};
+    config.headers["Content-Type"] = "application/json";
+  }
+  return config;
+});
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -24,7 +33,9 @@ api.interceptors.response.use(
 
       try {
         console.log("Refreshing token...");
-        await api.post(`${import.meta.env.VITE_BACKEND_API_URL}/auth/refreshToken`);
+        await api.post(
+          `${import.meta.env.VITE_BACKEND_API_URL}/auth/refreshToken`,
+        );
         return api.request(originalRequest);
       } catch (refreshError) {
         useAuthStore.getState().logout();
@@ -33,8 +44,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
-
 
 export default api;

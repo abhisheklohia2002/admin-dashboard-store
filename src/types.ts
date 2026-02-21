@@ -59,3 +59,8 @@ export interface PriceConfiguration {
     availableOptions:string[]
   }
 }
+
+export type ProductImageUploaderProps = {
+  onImageChange?: (url: string, file: File) => void;
+};
+

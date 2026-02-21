@@ -4,6 +4,7 @@ import {
   Drawer,
   Form,
   Image,
+  message,
   Space,
   Table,
   Tag,
@@ -14,14 +15,25 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import TableFilter from "../../shared/TableFilter";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Pagination } from "../../constants";
 import type { IProducts, IQueryParms } from "../../types";
-import { showProduct } from "../../http/api";
+import { createProduct, showProduct } from "../../http/api";
 import { format } from "date-fns";
 import { debounce } from "lodash";
 import ProductForm from "./form/ProductForm";
 
+type PriceConfigurationValue = {
+  priceType: string;
+  availableOptions: Record<string, number>;
+};
+
+type PriceConfiguration = Record<string, PriceConfigurationValue>;
+
+type AttributeItem = { name: string; value: string | boolean | number };
+type ProductEditPayload = {
+  attributes?: AttributeItem[];
+};
 const columns: TableProps<IProducts>["columns"] = [
   {
     title: "Product Name",
@@ -99,8 +111,23 @@ const products = async (
   return await showProduct(queryString);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createProducts = async (data: any) => {
+  return await createProduct(data);
+};
+
 export default function Products() {
   // const queryClient = useQueryClientt();
+  const createProduct = useMutation({
+    mutationKey: ["createProduct"],
+    mutationFn: createProducts,
+    onSuccess: async () => {
+      message.success("Product created");
+    },
+    onError: () => {
+      message.error("Failed to create user");
+    },
+  });
   const [searchProduct, setSearchProduct] = useState<string>("");
   const [searchCategory, setSearchCategory] = useState<number | null>(null);
   const [searchTenant, setSearchTenant] = useState<number | null>(null);
@@ -157,7 +184,7 @@ export default function Products() {
   const handleClose = () => {
     setIsOpen(false);
     seteditProduct(false);
-    setproductEdit(null);
+    setproductEdit({});
     form.resetFields();
   };
 
@@ -168,16 +195,16 @@ export default function Products() {
     }));
   };
   const onRestaurantChange = (value: string | undefined) => {
-     setproductEdit((prev) => ({
+    setproductEdit((prev) => ({
       ...prev,
-      tenantId:Number(value),
+      tenantId: Number(value),
     }));
   };
 
   const onPublishChange = (value: boolean) => {
-     setproductEdit((prev) => ({
+    setproductEdit((prev) => ({
       ...prev,
-      isPublished:value,
+      isPublished: value,
     }));
   };
 
@@ -185,19 +212,71 @@ export default function Products() {
     name: string;
     description: string;
   }) => {
-   
-      setproductEdit((prev) => ({
+    setproductEdit((prev) => ({
       ...prev,
-      name:value.name,
-      description:value.description
+      name: value.name,
+      description: value.description,
     }));
   };
 
+  const onProductImageChange = (url: string, file: any) => {
+    const realFile: File | undefined =
+      file instanceof File ? file : file?.originFileObj;
 
+    setproductEdit((prev) => ({
+      ...prev,
+      image: realFile,
+    }));
+  };
+  const onPriceChange = (value: PriceConfiguration) => {
+    setproductEdit((prev) => ({
+      ...prev,
+      priceConfiguration: value,
+    }));
+  };
 
-  useEffect(()=>{
-    console.log(productEdit,'prod')
-  },[productEdit])
+  const onAttributionChange = (value: ProductEditPayload) => {
+    setproductEdit((prev) => ({
+      ...prev,
+      attributes: value,
+    }));
+  };
+
+  const onFinish = async (values: any) => {
+  const payload = { ...values, ...productEdit };
+  console.log("payload", payload);
+
+  const fd = new FormData();
+
+  fd.append("name", payload.name ?? "");
+  fd.append("description", payload.description ?? "");
+  fd.append("categoryId", String(payload.categoryId ?? ""));
+  fd.append("tenantId", String(payload.tenantId ?? ""));
+  fd.append("isPublished", String(Boolean(payload.isPublished ?? payload.isPublish)));
+
+  const img = payload.image;
+  const realImg: File | undefined =
+    img instanceof File ? img : (img?.originFileObj as File | undefined);
+
+  if (!realImg) {
+    message.error("Product image is required");
+    return;
+  }
+
+  fd.append("image", realImg, realImg.name);
+
+  fd.append("priceConfiguration", JSON.stringify(payload.priceConfiguration ?? {}));
+  fd.append("attributes", JSON.stringify(payload.attributes?.attributes ?? payload.attributes ?? []));
+
+  for (const [k, v] of fd.entries()) {
+    console.log("FD:", k, v, v instanceof File ? `FILE(${v.name})` : "");
+  }
+
+  createProduct.mutate(fd);
+};
+  useEffect(() => {
+    console.log(productEdit, "prod");
+  }, [productEdit]);
 
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -227,10 +306,10 @@ export default function Products() {
             render: () => (
               <Space size="middle">
                 <EditFilled
-                //  onClick={(_text:string,record:IProducts) => {
-                //     setIsOpen(true);
-                //     setproductEditUser(record);
-                //   }}
+                 onClick={(_text:string,record:IProducts) => {
+                    setIsOpen(true);
+                  setproductEdit(record);
+                  }}
                 />
                 <DeleteFilled />
               </Space>
@@ -280,6 +359,7 @@ export default function Products() {
       >
         <Form
           form={form}
+          onFinish={onFinish}
           initialValues={{ remember: true }}
           // onFinish={onFinish}
           layout="vertical"
@@ -289,6 +369,9 @@ export default function Products() {
             onRestaurantChange={onRestaurantChange}
             onPublishChange={onPublishChange}
             onProductInfoChange={onProductInfoChange}
+            onProductImageChange={onProductImageChange}
+            onPriceChange={onPriceChange}
+            onAttributionChange={onAttributionChange}
           />
         </Form>
       </Drawer>
