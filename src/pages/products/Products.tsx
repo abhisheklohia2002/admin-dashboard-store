@@ -1,5 +1,7 @@
 import {
   Breadcrumb,
+  Button,
+  Drawer,
   Form,
   Image,
   Space,
@@ -8,15 +10,17 @@ import {
   Typography,
   type TableProps,
 } from "antd";
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import TableFilter from "../../shared/TableFilter";
 import { DeleteFilled, EditFilled } from "@ant-design/icons";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Pagination } from "../../constants";
 import type { IProducts, IQueryParms } from "../../types";
 import { showProduct } from "../../http/api";
 import { format } from "date-fns";
+import { debounce } from "lodash";
+import ProductForm from "./form/ProductForm";
 
 const columns: TableProps<IProducts>["columns"] = [
   {
@@ -62,24 +66,33 @@ const columns: TableProps<IProducts>["columns"] = [
     },
   },
 
-  { title: "CreatedAt", dataIndex: "createdAt", key: "createdAt",
-    render:(text:string)=>{
+  {
+    title: "CreatedAt",
+    dataIndex: "createdAt",
+    key: "createdAt",
+    render: (text: string) => {
       return (
         <Typography.Text>
-          {
-            format(new Date(text), "MM/dd/yyyy HH:mm")
-          }
+          {format(new Date(text), "MM/dd/yyyy HH:mm")}
         </Typography.Text>
-      )
-    }
-   },
+      );
+    },
+  },
 ];
 
-const products = async (queryParms: IQueryParms) => {
+const products = async (
+  queryParms: IQueryParms,
+  q: string,
+  categoryId: number | null,
+  TenantId: number | null,
+) => {
   const payload: Record<string, string> = {
     perPage: String(queryParms.perPage),
     currentPage: String(queryParms.currentPage),
   };
+  if (q) payload.q = q;
+  if (categoryId) payload.categoryId = String(categoryId);
+  if (TenantId) payload.tenantId = String(TenantId);
 
   const queryString = new URLSearchParams(payload).toString();
 
@@ -88,39 +101,103 @@ const products = async (queryParms: IQueryParms) => {
 
 export default function Products() {
   // const queryClient = useQueryClientt();
-  // const [form] = Form.useForm();
+  const [searchProduct, setSearchProduct] = useState<string>("");
+  const [searchCategory, setSearchCategory] = useState<number | null>(null);
+  const [searchTenant, setSearchTenant] = useState<number | null>(null);
+
+  const [form] = Form.useForm();
   const [queryParam, setQueryParam] = useState({
     perPage: Pagination.PER_PAGE,
     currentPage: 1,
   });
-  // const [isOpen, setIsOpen] = useState<boolean>(false);
-  // const [currentEditUser, setCurrentEditUser] = useState(null);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [productEdit, setproductEdit] = useState({});
+  const [editProduct, seteditProduct] = useState<boolean>(false);
 
   const { data: productData, isLoading } = useQuery({
-    queryKey: ["user", queryParam],
+    queryKey: ["user", queryParam, searchProduct, searchCategory, searchTenant],
     queryFn: ({ queryKey }) => {
       const [, qp] = queryKey as ["user", IQueryParms];
-      return products(qp);
-    },
-    onSuccess: () => {
-      console.log(productData?.data?.products, "dproductDataa");
+      return products(qp, searchProduct, searchCategory, searchTenant);
     },
     retry: false,
   });
-  const handleSearch = (value?: string) => {
-    // debounceSearch(value);
+
+  const debounceSearch = useMemo(() => {
+    return debounce((value: string) => {
+      setSearchProduct(value);
+    }, 1000);
+  }, []);
+  const handleSearch = (value: string) => {
+    debounceSearch(value);
   };
-  const handleRole = (value?: string) => {};
   // const handleStatus = (value?: string) => console.log(value, "status");
 
-  const handleAdd = (): void => {};
+  const handleAdd = (): void => setIsOpen(true);
+
+  const debounceTenant = useMemo(() => {
+    return debounce((value: number | null) => {
+      setSearchTenant(value);
+    }, 1000);
+  }, []);
   const handleTenant = (value: number): void => {
-    console.log(value, "data?.data?.data");
+    debounceTenant(value);
   };
 
-  const handleCategory = (value: number): void => {
+  const debounceCategory = useMemo(() => {
+    return debounce((value: number | null) => {
+      setSearchCategory(value);
+    }, 1000);
+  }, []);
+  const handleCategory = (value: number | null): void => {
     console.log(value, "data?.data?.data");
+    debounceCategory(value);
   };
+
+  const handleClose = () => {
+    setIsOpen(false);
+    seteditProduct(false);
+    setproductEdit(null);
+    form.resetFields();
+  };
+
+  const onCategoryChange = (categoryId: string | undefined) => {
+    setproductEdit((prev) => ({
+      ...prev,
+      categoryId,
+    }));
+  };
+  const onRestaurantChange = (value: string | undefined) => {
+     setproductEdit((prev) => ({
+      ...prev,
+      tenantId:Number(value),
+    }));
+  };
+
+  const onPublishChange = (value: boolean) => {
+     setproductEdit((prev) => ({
+      ...prev,
+      isPublished:value,
+    }));
+  };
+
+  const onProductInfoChange = (value: {
+    name: string;
+    description: string;
+  }) => {
+   
+      setproductEdit((prev) => ({
+      ...prev,
+      name:value.name,
+      description:value.description
+    }));
+  };
+
+
+
+  useEffect(()=>{
+    console.log(productEdit,'prod')
+  },[productEdit])
 
   return (
     <Space direction="vertical" size="middle" style={{ width: "100%" }}>
@@ -132,7 +209,6 @@ export default function Products() {
       />
       <TableFilter
         handleSearch={handleSearch}
-        handleRole={handleRole}
         handleAdd={handleAdd}
         handleTenant={handleTenant}
         handleCategory={handleCategory}
@@ -150,12 +226,12 @@ export default function Products() {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             render: () => (
               <Space size="middle">
-                {/* <EditFilled
-                  onClick={() => {
-                    setIsOpen(true);
-                    setCurrentEditUser(record);
-                  }}
-                /> */}
+                <EditFilled
+                //  onClick={(_text:string,record:IProducts) => {
+                //     setIsOpen(true);
+                //     setproductEditUser(record);
+                //   }}
+                />
                 <DeleteFilled />
               </Space>
             ),
@@ -177,6 +253,45 @@ export default function Products() {
           },
         }}
       />
+
+      <Drawer
+        title={!editProduct ? "Create Product" : "Update Product"}
+        open={isOpen}
+        width={720}
+        destroyOnClose
+        onClose={handleClose}
+        extra={
+          <Space>
+            <Button
+              onClick={() => setIsOpen(false)}
+              // disabled={createUser.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => form.submit()}
+              // loading={createUser.isPending}
+            >
+              Submit
+            </Button>
+          </Space>
+        }
+      >
+        <Form
+          form={form}
+          initialValues={{ remember: true }}
+          // onFinish={onFinish}
+          layout="vertical"
+        >
+          <ProductForm
+            onCategoryChange={onCategoryChange}
+            onRestaurantChange={onRestaurantChange}
+            onPublishChange={onPublishChange}
+            onProductInfoChange={onProductInfoChange}
+          />
+        </Form>
+      </Drawer>
     </Space>
   );
 }

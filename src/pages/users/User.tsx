@@ -214,7 +214,7 @@ export default function User() {
         handleRole={handleRole}
         handleStatus={handleStatus}
         handleAdd={handleAdd}
-        hide={['tenant',"category"]}
+        hide={['tenant',"category","isPublished"]}
       />
 
       <Table<UserData | undefined>

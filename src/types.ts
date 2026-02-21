@@ -40,5 +40,22 @@ export interface IProducts{
 }
 export interface ICategory{
   _id:string,
-  name:string
+  name?:string
+}
+
+
+export type ProductEditPayload = {
+  name?: string;
+  description?: string;
+  categoryId?: string;
+  tenantId?: number;
+  isPublished?: boolean;
+  image?: string;
+};
+
+export interface PriceConfiguration {
+  [key:string]:{
+    priceType:'base' | 'aditional',
+    availableOptions:string[]
+  }
 }

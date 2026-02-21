@@ -165,7 +165,7 @@ export default function Restaurants() {
         handleAdd={handleAdd}
         handleRole={() => {}}
         handleStatus={() => {}}
-       hide={["role", "status","tenant","category"]}
+       hide={["role", "status","tenant","category","isPublished"]}
        fullWidth = {false}
       />
       <div>

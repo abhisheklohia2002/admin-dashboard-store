@@ -1,13 +1,26 @@
 import { PlusOutlined } from "@ant-design/icons";
 import { useQuery } from "@tanstack/react-query";
-import { Button, Card, Col, Input, Row, Select } from "antd";
+import {
+  Button,
+  Card,
+  Col,
+  Input,
+  Row,
+  Select,
+  Space,
+  Form,
+  Switch,
+  Typography,
+} from "antd";
 import React, { useState } from "react";
 import type { ICategory, IQueryParms, Tenants } from "../types";
 import { allTenant, getCategories } from "../http/api";
+import { useAuthStore } from "../store/store";
+import { UserRole } from "../constants";
 
 type Role = "admin" | "manager" | "customer";
 type Status = "ban" | "active";
-type FilterKey = "search" | "role" | "status" | "add" | "tenant" | "category";
+type FilterKey = "search" | "role" | "status" | "add" | "tenant" | "category" | "isPublished";
 interface UserSearchProps {
   handleSearch?: (value: string) => void;
   handleRole?: (value: string) => void;
@@ -16,7 +29,7 @@ interface UserSearchProps {
   handleCategory?: (value: number) => void;
   handleAdd?: () => void;
   hide?: FilterKey[];
-  fullWidth?:boolean
+  fullWidth?: boolean;
 }
 
 const tenants = async (queryParams: IQueryParms) => {
@@ -28,9 +41,9 @@ const tenants = async (queryParams: IQueryParms) => {
 
   return await allTenant(queryString);
 };
-const getCategory = async()=>{
-  return await getCategories()
-}
+const getCategory = async () => {
+  return await getCategories();
+};
 
 export default function TableFilter({
   handleSearch = () => {},
@@ -40,8 +53,9 @@ export default function TableFilter({
   handleCategory = () => {},
   handleAdd = () => {},
   hide,
-  fullWidth=true
+  fullWidth = true,
 }: UserSearchProps) {
+  const { user } = useAuthStore();
   const [search, setSearch] = useState("");
   const [role, setRole] = useState<Role | undefined>(undefined);
   const [status, setStatus] = useState<Status | undefined>(undefined);
@@ -61,10 +75,9 @@ export default function TableFilter({
     retry: false,
   });
 
-
-    const { data:categories } = useQuery({
+  const { data: categories } = useQuery({
     queryKey: ["category"],
-    queryFn:getCategory,
+    queryFn: getCategory,
     retry: false,
   });
 
@@ -96,6 +109,8 @@ export default function TableFilter({
   const showStatus = !hidden.has("status");
   const showTenant = !hidden.has("tenant");
   const showCategory = !hidden.has("category");
+  const showPublished = !hidden.has("isPublished");
+
 
   return (
     <Card>
@@ -146,7 +161,7 @@ export default function TableFilter({
           </Col>
         )}
 
-        {showTenant && (
+        {user?.role !== UserRole.MANAGER && showTenant && (
           <Col xs={20} md={4}>
             <Select
               placeholder="Select Tenant"
@@ -182,9 +197,23 @@ export default function TableFilter({
           </Col>
         )}
 
+        { showPublished && 
+          <Col >
+            <Space style={{
+              marginTop:21
+            }}>
+              <Form.Item name="isPublished">
+                <Switch defaultChecked={false} onChange={() => {}}></Switch>
+                <Typography.Text
+                >Show only published</Typography.Text>
+              </Form.Item>
+            </Space>
+          </Col>
+        }
+
         <Col
           xs={24}
-          md={fullWidth ? 8 : 16}
+          md={fullWidth ? (showPublished ? 4 : 8) : 16}
           style={{ display: "flex", justifyContent: "flex-end" }}
         >
           <Button onClick={handleAdd} type="primary" icon={<PlusOutlined />}>
